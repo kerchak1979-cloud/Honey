@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Практическая работа: мёд натуральный</title>
+<style>
+  :root {
+    --bg: #f7f7f4;
+    --text: #1e1e1e;
+    --accent: #1a4d7a;
+    --fill-bg: #fffbe6;
+    --fill-border: #d9b850;
+    --ok: #2e7d32;
+    --fail: #c62828;
+    --border: #b8b8b8;
+    --highlight: #ffeb3b;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Georgia', 'Cambria', 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    margin: 0;
+    padding: 18px 18px 60px;
+    max-width: 1150px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 15px;
+  }
+  body.modal-open { overflow: hidden; }
+  h1 { text-align: center; font-size: 1.45em; margin: 0.3em 0 0.2em; letter-spacing: 0.02em; color: var(--accent); }
+  h2 { color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 5px; margin-top: 34px; font-size: 1.2em; }
+  h3 { font-size: 1.02em; margin: 18px 0 6px; }
+  p { margin: 0.4em 0; }
+  .subtitle { text-align: center; font-style: italic; color: #555; margin-bottom: 20px; font-size: 0.95em; }
+
+  .toolbar {
+    position: sticky; top: 0;
+    background: #fff;
+    padding: 10px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    z-index: 100;
+    margin-bottom: 18px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+  }
+  .toolbar button {
+    padding: 7px 12px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    transition: opacity 0.15s;
+  }
+  .toolbar button:hover { opacity: 0.88; }
+  .toolbar button.secondary { background: #fff; color: var(--accent); }
+  .toolbar button.danger { background: var(--fail); border-color: var(--fail); }
+  .toolbar button.success { background: var(--ok); border-color: var(--ok); }
+  .toolbar button.active { background: #7a1a1a; border-color: #7a1a1a; }
+  .progress { margin-left: auto; min-width: 180px; font-size: 12px; color: #444; }
+  .progress-bar { width: 100%; height: 7px; background: #e3e3e3; border-radius: 4px; overflow: hidden; margin-top: 3px; }
+  .progress-bar > div { height: 100%; width: 0; background: var(--ok); transition: width 0.25s ease; }
+  .saved-indicator { font-size: 12px; color: var(--ok); opacity: 0; transition: opacity 0.3s; min-width: 100px; }
+  .saved-indicator.show { opacity: 1; }
+
+  .instructions {
+    background: #eaf2fa;
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+    padding: 10px 16px;
+    margin: 0 0 18px;
+    font-size: 0.92em;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  .instructions summary { cursor: pointer; font-weight: 600; color: var(--accent); padding: 4px 0; font-size: 1.02em; }
+  .instructions summary:hover { text-decoration: underline; }
+  .instructions ul { margin: 8px 0 4px; padding-left: 22px; }
+  .instructions li { margin: 4px 0; }
+  .instructions kbd { background: #fff; border: 1px solid #bbb; border-radius: 3px; padding: 1px 6px; font-family: 'Consolas', monospace; font-size: 0.88em; }
+
+  .info-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;
+    margin: 10px 0 18px; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 14px;
+  }
+
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; background: #fff; font-size: 0.9em; }
+  th, td { border: 1px solid var(--border); padding: 6px 8px; vertical-align: top; text-align: left; }
+  th { background: #e9eef4; font-weight: 600; font-size: 0.93em; }
+  tr:nth-child(even) td { background: #fbfbf9; }
+
+  textarea.fill, input.fill {
+    background: var(--fill-bg);
+    border: 1px dashed var(--fill-border);
+    border-radius: 3px;
+    padding: 6px 8px;
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.95em;
+    color: var(--text);
+    min-height: 32px;
+  }
+  textarea.fill { resize: vertical; min-height: 44px; line-height: 1.4; }
+  textarea.fill:focus, input.fill:focus { outline: 2px solid var(--accent); background: #fffdf2; }
+  input.fill { height: 34px; }
+  input.fill[readonly] { background: #eef5ff; border-style: solid; cursor: default; }
+  td textarea.fill { min-height: 40px; }
+
+  .fill.invalid { border-color: var(--fail); background: #ffe6e6; }
+  .fill.missing-required { outline: 3px solid var(--fail); background: #ffe6e6; }
+  .row-mismatch td { background: #ffeae8 !important; }
+  .row-mismatch td:first-child::before { content: '⚠ '; color: var(--fail); font-weight: bold; }
+
+  .readonly-mode .fill { background: #f0f0f0 !important; border-style: solid; color: #444; cursor: not-allowed; }
+
+  .hint { font-size: 0.87em; color: #555; font-style: italic; margin-bottom: 6px; }
+  .hint-inline { font-size: 0.8em; color: #777; }
+  .act-header { font-size: 1.05em; font-weight: 700; text-align: center; margin: 16px 0 10px; letter-spacing: 0.04em; }
+  .sig-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 14px; }
+  .sig-row .sig { display: flex; gap: 8px; align-items: flex-end; font-size: 0.9em; }
+  .sig-row .sig .line { flex: 1; border-bottom: 1px solid #666; min-height: 22px; }
+  .sig-row .sig .line-name { flex: 1; border-bottom: 1px solid #666; min-height: 22px; }
+  .field-group { margin: 10px 0; }
+  .field-group label { display: block; font-weight: 600; font-size: 0.92em; margin-bottom: 3px; }
+
+  .mass-calc { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .mass-calc input { width: 90px; height: 34px; }
+  .mass-calc .result { width: 200px; }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-content {
+    background: #fff; border-radius: 8px;
+    max-width: 800px; width: 100%; max-height: 85vh; overflow-y: auto;
+    padding: 24px 28px; font-family: 'Georgia', serif;
+    position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal-content h2 { margin-top: 0; border-bottom: 2px solid var(--accent); }
+  .modal-content h3 { color: var(--accent); margin-top: 22px; }
+  .modal-content .ref-item { background: #f9f9f4; border-left: 3px solid var(--ok); padding: 10px 14px; margin: 8px 0; font-size: 0.93em; }
+  .modal-close {
+    position: sticky; top: 0; float: right;
+    background: var(--fail); color: #fff; border: none;
+    width: 32px; height: 32px; border-radius: 50%;
+    font-size: 20px; cursor: pointer; line-height: 1; z-index: 10;
+  }
+
+  /* GOST specific */
+  .gost-modal-content { max-width: 1000px; padding: 0; display: flex; flex-direction: column; }
+  .gost-header { padding: 16px 20px; background: var(--accent); color: #fff; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+  .gost-header h2 { margin: 0; color: #fff; border: none; font-size: 1.2em; }
+  .gost-search { flex: 1; min-width: 250px; display: flex; }
+  .gost-search input { width: 100%; padding: 8px 12px; border-radius: 4px; border: none; font-family: inherit; font-size: 14px; }
+  .gost-body { display: flex; flex: 1; overflow: hidden; max-height: calc(85vh - 60px); }
+  .gost-nav { width: 220px; background: #f4f6f8; border-right: 1px solid #ddd; padding: 15px 0; overflow-y: auto; flex-shrink: 0; }
+  .gost-nav a { display: block; padding: 8px 15px; color: #333; text-decoration: none; font-size: 0.9em; cursor: pointer; border-left: 3px solid transparent; }
+  .gost-nav a:hover { background: #e2e6ea; border-left-color: var(--accent); }
+  .gost-content-wrapper { flex: 1; overflow-y: auto; padding: 20px 30px; font-size: 0.92em; line-height: 1.5; }
+  .gost-content-wrapper h3 { margin-top: 0; color: #000; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+  .gost-content-wrapper h4 { margin-top: 20px; font-size: 1.05em; color: var(--accent); }
+  .gost-content-wrapper table { font-size: 0.85em; margin: 10px 0; }
+  .gost-content-wrapper mark { background-color: var(--highlight); color: #000; padding: 0 2px; border-radius: 2px; }
+  .gost-content-wrapper p { margin-bottom: 0.8em; text-align: justify; }
+  .gost-content-wrapper .gost-note { font-size: 0.9em; color: #555; font-style: italic; }
+
+  @media (max-width: 700px) {
+    body { padding: 10px; font-size: 14px; }
+    .sig-row { grid-template-columns: 1fr; }
+    .progress { width: 100%; margin-left: 0; margin-top: 6px; }
+    .mass-calc input { width: 70px; }
+    .mass-calc .result { width: 160px; }
+    .gost-body { flex-direction: column; }
+    .gost-nav { width: 100%; border-right: none; border-bottom: 1px solid #ddd; display: flex; overflow-x: auto; padding: 0; }
+    .gost-nav a { white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; padding: 10px 15px; }
+    .gost-nav a:hover { border-left-color: transparent; border-bottom-color: var(--accent); }
+  }
+  @media print {
+    body { background: #fff; padding: 0; font-size: 11pt; max-width: none; }
+    .toolbar, .no-print, .instructions, .modal-overlay, .hint { display: none !important; }
+    textarea.fill, input.fill { background: #fff; border: 1px solid #666; }
+    h2 { page-break-after: avoid; }
+    tr { page-break-inside: avoid; }
+    .row-mismatch td { background: #ffeae8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= ТУЛБАР ================= -->
+<div class="toolbar no-print">
+  <button onclick="saveNow()">💾 Сохранить</button>
+  <button onclick="printForm()" class="secondary">🖨 Печать / PDF</button>
+  <button onclick="exportJSON()" class="secondary">⬇ Экспорт</button>
+  <button onclick="importJSON()" class="secondary">⬆ Импорт</button>
+  <button onclick="sendToTeacher()" class="success">📤 Отправить</button>
+  <button onclick="toggleReadOnly()" id="btnReadonly" class="secondary">🔒 Только чтение</button>
+  <button onclick="showGost()" class="secondary" style="background: #fff0c2; border-color: #d9b850;">📖 ГОСТ</button>
+  <button onclick="showReference()" class="secondary">👁 Эталон</button>
+  <button onclick="clearAll()" class="danger">🗑 Очистить</button>
+  <div class="progress">
+    Заполнено: <span id="progressCount">0</span> из <span id="progressTotal">0</span>
+    <div class="progress-bar"><div id="progressFill"></div></div>
+  </div>
+  <span id="saveStatus" class="saved-indicator">✓ Сохранено</span>
+</div>
+
+<!-- ================= ИНСТРУКЦИЯ ================= -->
+<details class="instructions no-print">
+  <summary>📖 Как работать с формой</summary>
+  <ul>
+    <li><strong>Заполняйте жёлтые поля</strong> — это места для ваших ответов.</li>
+    <li>Данные <strong>автосохраняются</strong> в браузере при переходе между полями. Можно закрыть страницу и вернуться — всё останется на месте.</li>
+    <li>Кнопка <kbd>📖 ГОСТ</kbd> открывает полный текст ГОСТ 19792-2017 с удобным поиском. Используйте её, если нужно найти точные цифры или формулировки.</li>
+    <li><kbd>🖨 Печать / PDF</kbd> — формирует документ для сдачи. Перед печатью система проверит обязательные поля.</li>
+    <li><kbd>⬇ Экспорт</kbd> сохраняет данные в JSON-файл. <kbd>⬆ Импорт</kbd> загружает ранее сохранённый файл.</li>
+    <li><kbd>📤 Отправить</kbd> передаёт работу преподавателю через файл.</li>
+    <li><kbd>👁 Эталон</kbd> показывает образец правильных ответов (используйте для самопроверки после выполнения).</li>
+    <li><kbd>🔒 Только чтение</kbd> блокирует поля для проверки преподавателем.</li>
+  </ul>
+</details>
+
+<h1>ПРАКТИЧЕСКАЯ РАБОТА</h1>
+<p class="subtitle">Проведение идентификации товара, оценки полноты маркировки и качества потребительских товаров (на примере мёда натурального)</p>
+
+<!-- ================= СВЕДЕНИЯ О СТУДЕНТЕ ================= -->
+<section id="student-info">
+  <h2>Сведения о работе</h2>
+  <div class="info-grid">
+    <div class="field-group">
+      <label>ФИО студента</label>
+      <input class="fill" data-key="student_name" data-required="true" placeholder="Иванов Иван Иванович">
+    </div>
+    <div class="field-group">
+      <label>№ участника ДЭ</label>
+      <input class="fill" data-key="student_id" placeholder="ДЭ-05">
+    </div>
+    <div class="field-group">
+      <label>Группа</label>
+      <input class="fill" data-key="student_group" placeholder="Т-21">
+    </div>
+    <div class="field-group">
+      <label>Дата выполнения</label>
+      <input class="fill" data-key="student_date" placeholder="«___» __________ 20___ г.">
+    </div>
+  </div>
+</section>
+
+<!-- ================= ЗАДАНИЕ 1 ================= -->
+<section id="task1">
+  <h2>Задание 1. Оценка полноты и достоверности маркировки</h2>
+  <p class="hint">Заполните столбцы «Соответствие» и «Последствия для потребителя». В конце раздела сформулируйте вывод. <em>(Подсказка: требования к маркировке меда указаны в п. 5.2.2 ГОСТ 19792-2017 и в ТР ТС 022/2011)</em></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:3%">№</th>
+        <th style="width:16%">Обязательное сведение</th>
+        <th style="width:13%">Требование НТД</th>
+        <th style="width:17%">Фактически на этикетке</th>
+        <th style="width:14%">Соответствие</th>
+        <th style="width:37%">Последствия для потребителя</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Наименование продукции</td><td>ТР ТС 022/2011, ч. 4.1, п. 1</td><td>«Мед пчелиный, натуральный, липовый»</td><td><textarea class="fill" data-key="t1_1_status"></textarea></td><td><textarea class="fill" data-key="t1_1_cons"></textarea></td></tr>
+      <tr><td>2</td><td>Состав</td><td>ТР ТС 022/2011, ч. 4.1, п. 2</td><td>не указан</td><td><textarea class="fill" data-key="t1_2_status"></textarea></td><td><textarea class="fill" data-key="t1_2_cons"></textarea></td></tr>
+      <tr><td>3</td><td>Количество (масса нетто)</td><td>ТР ТС 022/2011, ч. 4.1, п. 3</td><td>300 г</td><td><textarea class="fill" data-key="t1_3_status"></textarea></td><td><textarea class="fill" data-key="t1_3_cons"></textarea></td></tr>
+      <tr><td>4</td><td>Дата изготовления (фасования)</td><td>ТР ТС 022/2011, ч. 4.1, п. 4</td><td>10.08.2025</td><td><textarea class="fill" data-key="t1_4_status"></textarea></td><td><textarea class="fill" data-key="t1_4_cons"></textarea></td></tr>
+      <tr><td>5</td><td>Срок годности</td><td>ТР ТС 022/2011, ч. 4.1, п. 5</td><td>не указан</td><td><textarea class="fill" data-key="t1_5_status"></textarea></td><td><textarea class="fill" data-key="t1_5_cons"></textarea></td></tr>
+      <tr><td>6</td><td>Условия хранения</td><td>ТР ТС 022/2011, ч. 4.1, п. 6</td><td>не указаны</td><td><textarea class="fill" data-key="t1_6_status"></textarea></td><td><textarea class="fill" data-key="t1_6_cons"></textarea></td></tr>
+      <tr><td>7</td><td>Наименование и место нахождения изготовителя</td><td>ТР ТС 022/2011, ч. 4.1, п. 7</td><td>указано только «ООО «Башкирская пчелка»» без адреса</td><td><textarea class="fill" data-key="t1_7_status"></textarea></td><td><textarea class="fill" data-key="t1_7_cons"></textarea></td></tr>
+      <tr><td>8</td><td>Показатели пищевой ценности</td><td>ТР ТС 022/2011, ч. 4.1, п. 9</td><td>не указаны</td><td><textarea class="fill" data-key="t1_8_status"></textarea></td><td><textarea class="fill" data-key="t1_8_cons"></textarea></td></tr>
+      <tr><td>9</td><td>Единый знак обращения</td><td>ТР ТС 022/2011, ч. 4.1, п. 11</td><td>отсутствует</td><td><textarea class="fill" data-key="t1_9_status"></textarea></td><td><textarea class="fill" data-key="t1_9_cons"></textarea></td></tr>
+      <tr><td>10</td><td>Год сбора мёда</td><td>ГОСТ 19792-2017, п. 5.2.2</td><td>2025</td><td><textarea class="fill" data-key="t1_10_status"></textarea></td><td><textarea class="fill" data-key="t1_10_cons"></textarea></td></tr>
+      <tr><td>11</td><td>Обозначение стандарта</td><td>ГОСТ 19792-2017, п. 5.2.2</td><td>ГОСТ 19792</td><td><textarea class="fill" data-key="t1_11_status"></textarea></td><td><textarea class="fill" data-key="t1_11_cons"></textarea></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Вывод по заданию 1</h3>
+  <p class="hint">Укажите, соответствует ли маркировка требованиям ТР ТС 022/2011 и ГОСТ 19792-2017, какие сведения отсутствуют, к каким последствиям это приводит.</p>
+  <textarea class="fill" data-key="t1_conclusion" data-required="true" rows="5" placeholder="Маркировка образца…"></textarea>
+</section>
+
+<!-- ================= ЗАДАНИЕ 2 ================= -->
+<section id="task2">
+  <h2>Задание 2. Определение ассортиментной принадлежности товара</h2>
+  <p class="hint">Установите группу, к которой относится образец. Обоснуйте отнесение к монофлорному липовому мёду. Укажите, какой метод подтверждает монофлорность. <em>(Подсказка: см. раздел 4 «Классификация» и п. 5.1.5 ГОСТ 19792-2017)</em></p>
+  <h3>Заключение об ассортиментной принадлежности</h3>
+  <textarea class="fill" data-key="t2_conclusion" data-required="true" rows="7" placeholder="Представленный образец относится к группе…"></textarea>
+</section>
+
+<!-- ================= ЗАДАНИЕ 3 ================= -->
+<section id="task3">
+  <h2>Задание 3. Определение величины выборки и массы пробы</h2>
+  <p class="hint">Заполните акт отбора проб. Используйте данные приложения 6 и требования ГОСТ 19792-2017 (п. 6.5, 7.1). Впишите все значения и сформулируйте вывод.</p>
+
+  <h3>Акт отбора проб (образцов)</h3>
+  <table style="width:100%;">
+    <tr><td style="width:35%;"><strong>Номер акта</strong></td><td><input class="fill" data-key="t3_act_num" data-required="true" placeholder="№ ____"></td></tr>
+    <tr><td><strong>Дата составления</strong></td><td><input class="fill" data-key="t3_act_date" placeholder="«___» __________ 20___ г."></td></tr>
+    <tr><td><strong>Место отбора</strong></td><td><input class="fill" data-key="t3_place" data-required="true" placeholder="город, организация"></td></tr>
+    <tr><td><strong>Заявитель</strong></td><td><input class="fill" data-key="t3_applicant" data-required="true" placeholder="наименование, адрес"></td></tr>
+    <tr><td><strong>Изготовитель</strong></td><td>ООО «Башкирская пчелка», г. Уфа</td></tr>
+    <tr><td><strong>Наименование продукции</strong></td><td>Мед натуральный липовый</td></tr>
+    <tr><td><strong>Дата изготовления (фасования)</strong></td><td>10.08.2025</td></tr>
+    <tr><td><strong>Номер партии</strong></td><td><input class="fill" data-key="t3_batch" placeholder="(при наличии)"></td></tr>
+    <tr>
+      <td><strong>Масса партии</strong></td>
+      <td>
+        <div class="mass-calc">
+          <input class="fill" type="number" data-key="t3_cans" data-required="true" placeholder="800" min="0"> банок ×
+          <input class="fill" type="number" data-key="t3_weight" data-required="true" placeholder="300" min="0"> г =
+          <input class="fill result" data-key="t3_mass_party" readonly placeholder="авторасчёт">
+        </div>
+        <div class="hint-inline">Введите количество банок и массу нетто одной банки — итог рассчитается автоматически.</div>
+      </td>
+    </tr>
+    <tr><td><strong>Вид упаковки</strong></td><td><input class="fill" data-key="t3_pack" data-required="true" placeholder="стеклянная банка, масса нетто 300 г"></td></tr>
+    <tr><td><strong>Основание для отбора</strong></td><td>ГОСТ 19792-2017, п. 6.5, 7.1</td></tr>
+  </table>
+
+  <h3>Результаты отбора</h3>
+  <table>
+    <thead><tr><th style="width:60%;">Показатель</th><th>Значение</th></tr></thead>
+    <tbody>
+      <tr><td>Количество отобранных упаковочных единиц, шт.</td><td><input class="fill" data-key="t3_units" data-required="true"></td></tr>
+      <tr><td>Масса точечной пробы, г</td><td><input class="fill" data-key="t3_spot" data-required="true"></td></tr>
+      <tr><td>Масса объединённой пробы, г</td><td><input class="fill" data-key="t3_combined" data-required="true"></td></tr>
+      <tr><td>Масса средней пробы, г</td><td><input class="fill" data-key="t3_average" data-required="true"></td></tr>
+      <tr><td>Масса пробы для лаборатории, г</td><td><input class="fill" data-key="t3_lab" data-required="true"></td></tr>
+      <tr><td>Масса контрольной пробы, г</td><td><input class="fill" data-key="t3_control" data-required="true"></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Состояние упаковки и маркировки</h3>
+  <p class="hint">Опишите результаты внешнего осмотра: целостность упаковки, наличие или отсутствие обязательных сведений на этикетке.</p>
+  <textarea class="fill" data-key="t3_state" data-required="true" rows="5" placeholder="Упаковка стеклянных банок без видимых повреждений; маркировка содержит…"></textarea>
+
+  <p style="margin-top:14px;">Пробы отобраны в соответствии с требованиями: <strong>ГОСТ 19792-2017</strong>.</p>
+
+  <h3>Подписи</h3>
+  <div class="sig-row">
+    <div class="sig">
+      <div><div class="line"></div><div class="hint-inline">От заявителя (подпись)</div></div>
+      <div><div class="line-name"></div><div class="hint-inline">Ф.И.О.</div></div>
+    </div>
+    <div class="sig">
+      <div><div class="line"></div><div class="hint-inline">Представитель лаборатории (подпись)</div></div>
+      <div><div class="line-name"></div><div class="hint-inline">Ф.И.О.</div></div>
+    </div>
+  </div>
+
+  <h3>Вывод по заданию 3</h3>
+  <p class="hint">Укажите, какие именно данные внесены, как определена масса выборки, соблюдены ли требования ГОСТ 19792-2017.</p>
+  <textarea class="fill" data-key="t3_conclusion" data-required="true" rows="4" placeholder="Для проведения экспертизы отобрано…"></textarea>
+</section>
+
+<!-- ================= ЗАДАНИЕ 4 ================= -->
+<section id="task4">
+  <h2>Задание 4. Оценка соответствия качества требованиям НТД</h2>
+  <p class="hint">Сопоставьте фактические значения с нормами ГОСТ 19792-2017. В столбец «Заключение» впишите «соответствует» или «не соответствует» с пояснением. Строки с несоответствием подсвечиваются автоматически. <em>(Подсказка: нормы указаны в таблице 2 п. 5.1.3 ГОСТ 19792-2017)</em></p>
+
+  <table id="qualityTable">
+    <thead>
+      <tr>
+        <th style="width:32%;">Показатель</th>
+        <th style="width:20%;">Норма по ГОСТ 19792-2017</th>
+        <th style="width:16%;">Фактическое значение</th>
+        <th style="width:32%;">Заключение</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-auto-check><td>Массовая доля воды, %</td><td>не более 20</td><td>20,1</td><td><textarea class="fill" data-key="t4_1_conc" data-required="true"></textarea></td></tr>
+      <tr data-auto-check><td>Массовая доля редуцирующих сахаров, %</td><td>не менее 65</td><td>82,1</td><td><textarea class="fill" data-key="t4_2_conc" data-required="true"></textarea></td></tr>
+      <tr data-auto-check><td>Массовая доля сахарозы, %</td><td>не более 5</td><td>4,9</td><td><textarea class="fill" data-key="t4_3_conc" data-required="true"></textarea></td></tr>
+      <tr data-auto-check><td>Диастазное число, ед. Готе</td><td>не менее 8</td><td>4</td><td><textarea class="fill" data-key="t4_4_conc" data-required="true"></textarea></td></tr>
+      <tr data-auto-check><td>Качественная реакция на ГМФ</td><td>отрицательная</td><td>положительная</td><td><textarea class="fill" data-key="t4_5_conc" data-required="true"></textarea></td></tr>
+      <tr data-auto-check><td>Механические примеси</td><td>не допускаются</td><td>отсутствуют</td><td><textarea class="fill" data-key="t4_6_conc" data-required="true"></textarea></td></tr>
+      <tr data-auto-check><td>Признаки брожения</td><td>не допускаются</td><td>отсутствуют</td><td><textarea class="fill" data-key="t4_7_conc" data-required="true"></textarea></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Вывод по заданию 4</h3>
+  <p class="hint">Перечислите, по каким показателям образец не соответствует ГОСТ 19792-2017. Объясните возможные причины (перегрев, нарушение условий хранения, фальсификация). Укажите, какой лабораторный метод используется для подтверждения.</p>
+  <textarea class="fill" data-key="t4_conclusion" data-required="true" rows="6" placeholder="Образец мёда не соответствует требованиям ГОСТ 19792-2017 по…"></textarea>
+</section>
+
+<!-- ================= ЗАДАНИЕ 5 ================= -->
+<section id="task5">
+  <h2>Задание 5. Оформление акта экспертизы</h2>
+  <p class="hint">Заполните все поля акта. Недостающие сведения (номер наряда, даты, Ф.И.О.) укажите произвольно, соблюдая логику документа.</p>
+
+  <div class="act-header">АКТ ЭКСПЕРТИЗЫ № <input class="fill" data-key="t5_num" data-required="true" style="width:120px; display:inline-block;" placeholder="____"></div>
+
+  <div class="field-group"><label>1. Дата составления</label><input class="fill" data-key="t5_date" placeholder="«___» __________ 20___ г."></div>
+  <div class="field-group"><label>2. Место составления</label><input class="fill" data-key="t5_place" data-required="true" placeholder="населённый пункт, организация"></div>
+  <div class="field-group"><label>3. Акт составлен экспертом</label><input class="fill" data-key="t5_expert" data-required="true" placeholder="Ф.И.О., должность, организация"></div>
+
+  <h3>Экспертиза проведена с участием представителей</h3>
+  <table>
+    <thead><tr><th style="width:40%;">Организация</th><th style="width:30%;">Должность</th><th style="width:30%;">Ф.И.О.</th></tr></thead>
+    <tbody>
+      <tr><td><input class="fill" data-key="t5_rep_1_org"></td><td><input class="fill" data-key="t5_rep_1_pos"></td><td><input class="fill" data-key="t5_rep_1_name"></td></tr>
+      <tr><td><input class="fill" data-key="t5_rep_2_org"></td><td><input class="fill" data-key="t5_rep_2_pos"></td><td><input class="fill" data-key="t5_rep_2_name"></td></tr>
+    </tbody>
+  </table>
+
+  <div class="field-group"><label>4. Основание</label><input class="fill" data-key="t5_basis" placeholder="Наряд № ___ от «___» __________ 20___ г."></div>
+  <div class="field-group"><label>5. К экспертизе предъявлено</label><textarea class="fill" data-key="t5_presented" data-required="true" rows="2" placeholder="Наименование товара, количество образцов, масса нетто, вид упаковки"></textarea></div>
+  <div class="field-group"><label>6. Задача экспертизы</label><textarea class="fill" data-key="t5_task" data-required="true" rows="2" placeholder="Провести идентификацию товара, оценить полноту и достоверность маркировки, определить соответствие качества…"></textarea></div>
+  <div class="field-group"><label>7. Страна, производитель</label><input class="fill" data-key="t5_country" placeholder="Российская Федерация, ООО «Башкирская пчелка», г. Уфа"></div>
+
+  <h3>8. Экспертизой установлено</h3>
+  <div class="field-group"><label>8.1. Оценка маркировки</label><textarea class="fill" data-key="t5_marking" data-required="true" rows="4" placeholder="Укажите соответствие или несоответствие ТР ТС 022/2011 и ГОСТ 19792-2017, перечислите отсутствующие сведения…"></textarea></div>
+  <div class="field-group"><label>8.2. Идентификация ассортиментной принадлежности</label><textarea class="fill" data-key="t5_ident" data-required="true" rows="3" placeholder="Группа, к которой относится образец; обоснование отнесения к монофлорному мёду…"></textarea></div>
+
+  <h3>8.3. Оценка качества по органолептическим и физико-химическим показателям</h3>
+  <table>
+    <thead>
+      <tr><th style="width:36%;">Показатель</th><th style="width:20%;">Норма по ГОСТ 19792-2017</th><th style="width:16%;">Фактическое значение</th><th style="width:28%;">Соответствие</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Массовая доля воды, %</td><td>не более 20</td><td>20,1</td><td><textarea class="fill" data-key="t5_5_1" data-required="true"></textarea></td></tr>
+      <tr><td>Массовая доля редуцирующих сахаров, %</td><td>не менее 65</td><td>82,1</td><td><textarea class="fill" data-key="t5_5_2" data-required="true"></textarea></td></tr>
+      <tr><td>Массовая доля сахарозы, %</td><td>не более 5</td><td>4,9</td><td><textarea class="fill" data-key="t5_5_3" data-required="true"></textarea></td></tr>
+      <tr><td>Диастазное число, ед. Готе</td><td>не менее 8</td><td>4</td><td><textarea class="fill" data-key="t5_5_4" data-required="true"></textarea></td></tr>
+      <tr><td>Качественная реакция на ГМФ</td><td>отрицательная</td><td>положительная</td><td><textarea class="fill" data-key="t5_5_5" data-required="true"></textarea></td></tr>
+      <tr><td>Механические примеси</td><td>не допускаются</td><td>отсутствуют</td><td><textarea class="fill" data-key="t5_5_6" data-required="true"></textarea></td></tr>
+      <tr><td>Признаки брожения</td><td>не допускаются</td><td>отсутствуют</td><td><textarea class="fill" data-key="t5_5_7" data-required="true"></textarea></td></tr>
+    </tbody>
+  </table>
+
+  <div class="field-group">
+    <label>Замечания эксперта</label>
+    <p class="hint">Кратко перечислите несоответствия со ссылкой на пункты нормативных документов, укажите возможные причины и необходимость дополнительной проверки.</p>
+    <textarea class="fill" data-key="t5_notes" data-required="true" rows="4" placeholder="Выявленные несоответствия по…"></textarea>
+  </div>
+
+  <div class="field-group"><label>9. Дата начала проверки образцов</label><input class="fill" data-key="t5_start" placeholder="«___» __________ 20___ г."></div>
+  <div class="field-group"><label>10. Дата окончания проверки образцов</label><input class="fill" data-key="t5_end" placeholder="«___» __________ 20___ г."></div>
+
+  <div class="field-group">
+    <label>11. Заключение эксперта</label>
+    <p class="hint">Укажите, по каким показателям продукт не соответствует, какова судьба партии (реализация после устранения нарушений, изъятие из оборота и т. п.).</p>
+    <textarea class="fill" data-key="t5_conclusion" data-required="true" rows="6" placeholder="Образец мёда натурального липового…"></textarea>
+  </div>
+
+  <div class="sig-row">
+    <div class="sig">
+      <div><div class="line"></div><div class="hint-inline">Эксперт (подпись)</div></div>
+      <div><div class="line-name"></div><div class="hint-inline">Ф.И.О.</div></div>
+    </div>
+  </div>
+
+  <h3>Замечания</h3>
+  <textarea class="fill" data-key="t5_extra_notes" rows="2"></textarea>
+
+  <h3>Подписи сторон</h3>
+  <div class="sig-row">
+    <div class="sig">
+      <div><div class="line"></div><div class="hint-inline">Эксперт</div></div>
+      <div><div class="line-name"></div><div class="hint-inline">Ф.И.О.</div></div>
+    </div>
+    <div class="sig">
+      <div><div class="line"></div><div class="hint-inline">Представитель заявителя</div></div>
+      <div><div class="line-name"></div><div class="hint-inline">Ф.И.О.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= МОДАЛЬНОЕ ОКНО ЭТАЛОНА ================= -->
+<div id="referenceModal" class="modal-overlay no-print" onclick="closeReferenceOnBackdrop(event)">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="refTitle">
+    <button class="modal-close" onclick="closeReference()" title="Закрыть">×</button>
+    <h2 id="refTitle">Эталонные ответы</h2>
+    <p style="font-style:italic;color:#666;">Используйте этот раздел для самопроверки после выполнения работы. Сравните свои ответы с образцом.</p>
+
+    <h3>Задание 1. Вывод</h3>
+    <div class="ref-item">Маркировка образца не соответствует требованиям ТР ТС 022/2011 и ГОСТ 19792-2017 по полноте обязательных сведений. Отсутствуют: состав, срок годности, условия хранения, полное наименование и адрес изготовителя, показатели пищевой ценности, единый знак обращения. Потребитель лишён возможности определить срок годности продукта, условия его хранения и энергетическую ценность, а также не имеет сведений для предъявления претензий.</div>
+
+    <h3>Задание 2. Ассортиментная принадлежность</h3>
+    <div class="ref-item">Представленный образец относится к группе «меды натуральные цветочные». По заявленному наименованию и совокупности органолептических показателей (светло-жёлтый цвет, тонкий приятный аромат, сладкий вкус без посторонних привкусов) идентифицирован как мёд липовый. В соответствии с ГОСТ 31766-2022 липовый мёд относится к монофлорным медам. Для окончательного подтверждения ботанического происхождения требуется пыльцевой анализ, который выходит за рамки органолептической оценки.</div>
+
+    <h3>Задание 3. Ключевые значения</h3>
+    <div class="ref-item">
+      Масса партии: 800 банок × 300 г = 240 кг.<br>
+      Количество отобранных упаковочных единиц: 3 шт. (по таблице 4 ГОСТ 19792-2017 при массе нетто 200–300 г).<br>
+      Масса точечной пробы: по 300 г от каждой банки.<br>
+      Масса объединённой пробы: 900 г.<br>
+      Масса средней пробы: не менее 500 г.<br>
+      Масса пробы для лаборатории: не менее 200 г.<br>
+      Масса контрольной пробы: остаток средней пробы.
+    </div>
+
+    <h3>Задание 4. Заключение о качестве</h3>
+    <div class="ref-item">Образец мёда не соответствует требованиям ГОСТ 19792-2017 по трём физико-химическим показателям: массовой доле воды (20,1 % при норме не более 20 %), диастазному числу (4 ед. Готе при норме не менее 8) и качественной реакции на оксиметилфурфурол (положительная при требуемой отрицательной). Совокупность отклонений указывает на возможный перегрев мёда, нарушение условий хранения или фальсификацию. Для окончательного подтверждения причины требуется лабораторный метод высокоэффективной жидкостной хроматографии (ВЭЖХ).</div>
+
+    <h3>Задание 5. Заключение эксперта</h3>
+    <div class="ref-item">Образец мёда натурального липового не соответствует требованиям ГОСТ 19792-2017 по массовой доле воды, диастазному числу и качественной реакции на ГМФ. Маркировка не соответствует требованиям ТР ТС 022/2011 и ГОСТ 19792-2017 по полноте обязательных сведений. Партия не может быть признана соответствующей и подлежит реализации только после устранения выявленных нарушений маркировки и подтверждения безопасности и качества в установленном порядке. При неустранении нарушений партия подлежит изъятию из оборота.</div>
+  </div>
+</div>
+
+<!-- ================= МОДАЛЬНОЕ ОКНО ГОСТ ================= -->
+<div id="gostModal" class="modal-overlay no-print" onclick="closeGostOnBackdrop(event)">
+  <div class="modal-content gost-modal-content">
+    <div class="gost-header">
+      <h2>ГОСТ 19792-2017</h2>
+      <div class="gost-search">
+        <input type="text" id="gostSearch" placeholder="Поиск по тексту (например: вода, маркировка, отбор)..." oninput="searchGost()">
+      </div>
+      <button class="modal-close" style="position:static; float:none; margin-left:10px;" onclick="closeGost()" title="Закрыть">×</button>
+    </div>
+    <div class="gost-body">
+      <nav class="gost-nav">
+        <a onclick="scrollToGostSection('gost-class')">4. Классификация</a>
+        <a onclick="scrollToGostSection('gost-quality')">5.1. Показатели качества</a>
+        <a onclick="scrollToGostSection('gost-marking')">5.2. Маркировка</a>
+        <a onclick="scrollToGostSection('gost-sampling')">6.5. Правила приемки (выборка)</a>
+        <a onclick="scrollToGostSection('gost-sampling-proc')">7.1. Отбор проб</a>
+        <a onclick="scrollToGostSection('gost-storage')">8. Транспортирование и хранение</a>
+      </nav>
+      <div class="gost-content-wrapper" id="gostContent">
+        <h3 id="gost-class">4. Классификация</h3>
+        <p>Мед бывает следующих видов: цветочный, падевый и смешанный. Цветочный мед может быть монофлорным и полифлорным. Ботаническое происхождение цветочного монофлорного меда определяют по доминирующему медоносу (доминирующим медоносам).</p>
+        <p>Мед производят и/или реализуют как сотовый, центрифужный, прессовый.</p>
+
+        <h3 id="gost-quality">5.1.3. Технические требования (Таблица 2)</h3>
+        <p>Мед по органолептическим и физико-химическим показателям должен соответствовать требованиям, указанным в таблице 2.</p>
+        <table>
+          <thead><tr><th>Наименование показателя</th><th>Характеристика и значение показателя</th></tr></thead>
+          <tbody>
+            <tr><td>Внешний вид (консистенция)</td><td>Жидкий, частично или полностью закристаллизованный</td></tr>
+            <tr><td>Аромат</td><td>Приятный, от слабого до сильного, без постороннего запаха</td></tr>
+            <tr><td>Вкус</td><td>Сладкий, приятный, без постороннего привкуса</td></tr>
+            <tr><td>Массовая доля воды, %, не более</td><td><strong>20</strong></td></tr>
+            <tr><td>Массовая доля редуцирующих сахаров, %, не менее</td><td><strong>65</strong></td></tr>
+            <tr><td>Массовая доля фруктозы и глюкозы суммарно, %, не менее:<br>- для цветочного меда<br>- падевого и смешанного меда</td><td>60<br>45</td></tr>
+            <tr><td>Массовая доля сахарозы, %, не более:<br>- для цветочного меда<br>- меда с белой акации<br>- падевого и смешанного медов</td><td><strong>5</strong><br>10<br>15</td></tr>
+            <tr><td>Диастазное число, ед. Готе, не менее:<br>- для всех видов меда<br>- для меда с белой акации</td><td><strong>8</strong><br>5</td></tr>
+            <tr><td>Массовая доля ГМФ, млн-1 (мг/кг), не более</td><td>25</td></tr>
+            <tr><td>Качественная реакция на ГМФ</td><td><strong>Отрицательная</strong></td></tr>
+            <tr><td>Механические примеси</td><td>Не допускаются</td></tr>
+            <tr><td>Признаки брожения</td><td>Не допускаются</td></tr>
+          </tbody>
+        </table>
+
+        <h3 id="gost-marking">5.2.2. Маркировка потребительской упаковки</h3>
+        <p>Маркировка потребительской упаковки меда должна содержать следующие сведения:</p>
+        <ul>
+          <li>наименование продукта;</li>
+          <li>масса нетто;</li>
+          <li>год сбора;</li>
+          <li>дата фасования (упаковки) при фасовании в потребительскую упаковку;</li>
+          <li>дата упаковывания;</li>
+          <li>срок годности;</li>
+          <li>условия хранения;</li>
+          <li>условия хранения после вскрытия упаковки;</li>
+          <li>наименование и место нахождения изготовителя;</li>
+          <li>показатели пищевой ценности;</li>
+          <li>единый знак обращения продукции на рынке;</li>
+          <li>товарный знак изготовителя (при наличии).</li>
+        </ul>
+
+        <h3 id="gost-sampling">6.5. Правила приемки (Выборка)</h3>
+        <p>Выборку меда, фасованного в мелкую тару, проводят от каждой партии в соответствии с таблицей 4. Масса меда в отобранных единицах продукции должна быть не менее 500 г суммарно.</p>
+        <table>
+          <thead><tr><th>Масса нетто меда в единице продукции, г</th><th>Количество отбираемых единиц продукции, шт., не менее</th></tr></thead>
+          <tbody>
+            <tr><td>До 50</td><td>10</td></tr>
+            <tr><td>Св. 50 до 100 включ.</td><td>5</td></tr>
+            <tr><td>Св. 100 до 150 включ.</td><td>4</td></tr>
+            <tr><td>Св. 150 до 200 включ.</td><td>4</td></tr>
+            <tr><td><strong>Св. 200 до 300 включ.</strong></td><td><strong>3</strong></td></tr>
+            <tr><td>Св. 300 до 450 включ.</td><td>2</td></tr>
+            <tr><td>Св. 450 до 1000 включ.</td><td>2</td></tr>
+            <tr><td>Св. 1000</td><td>1</td></tr>
+          </tbody>
+        </table>
+
+        <h3 id="gost-sampling-proc">7.1. Методы испытаний (Отбор проб)</h3>
+        <p><strong>7.1.1</strong> Точечную пробу отбирают от каждой отобранной единицы упаковки. Мед, упакованный в тару вместимостью до 1 дм3, перемешивают и извлекают шпателем для составления объединенной пробы.</p>
+        <p><strong>7.1.2</strong> Объединенную пробу составляют из точечных, тщательно перемешивают и выделяют среднюю пробу массой не менее 500 г.</p>
+        <p><strong>7.1.3</strong> Среднюю пробу делят на две части, помещают в две чистые, сухие стеклянные или полимерные банки, плотно укупоривают и маркируют. Одну банку, в которой не менее 200 г меда, передают в лабораторию для проведения испытаний, другую хранят как контрольную.</p>
+
+        <h3 id="gost-storage">8. Транспортирование и хранение</h3>
+        <p><strong>8.2.1</strong> Натуральный мед хранят в помещениях, защищенных от прямых солнечных лучей. Не допускается его хранение вместе с ядовитыми, пылящими продуктами и продуктами, которые могут придать меду не свойственный ему запах.</p>
+        <p><strong>8.2.4</strong> Температура хранения натурального меда не выше 20 °С.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'honey_practical_v4'; // Обновлен ключ из-за добавления ГОСТа
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+
+  const MONTHS_RU = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+  function formatDateRu(d) {
+    return '«' + d.getDate() + '» ' + MONTHS_RU[d.getMonth()] + ' ' + d.getFullYear() + ' г.';
+  }
+
+  // ============ СБОР / СОХРАНЕНИЕ / ЗАГРУЗКА ============
+  function collectData() {
+    const data = {};
+    $$('[data-key]').forEach(el => { data[el.dataset.key] = el.value; });
+    return data;
+  }
+
+  function saveNow() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collectData()));
+      showSaveStatus();
+    } catch (e) { console.warn('Не удалось сохранить:', e); }
+  }
+
+  function loadData() {
+    let raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { return false; }
+    if (!raw) return false;
+    try {
+      const data = JSON.parse(raw);
+      $$('[data-key]').forEach(el => {
+        if (data[el.dataset.key] !== undefined) el.value = data[el.dataset.key];
+      });
+      return true;
+    } catch (e) { console.warn('Ошибка чтения:', e); return false; }
+  }
+
+  let saveTimer = null;
+  function showSaveStatus() {
+    const el = $('#saveStatus');
+    if (!el) return;
+    el.classList.add('show');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  // ============ АВТОЗАПОЛНЕНИЕ ДАТ ============
+  function autoFillEmptyDates() {
+    const today = formatDateRu(new Date());
+    ['t3_act_date', 't5_date', 't5_start', 't5_end', 'student_date'].forEach(key => {
+      const el = document.querySelector('[data-key="' + key + '"]');
+      if (el && !el.value.trim()) el.value = today;
+    });
+  }
+
+  // ============ ПРОГРЕСС ============
+  function updateProgress() {
+    const fields = $$('.fill');
+    const total = fields.length;
+    let filled = 0;
+    fields.forEach(f => { if (f.value && f.value.trim() !== '') filled++; });
+    const c = $('#progressCount'), t = $('#progressTotal'), bar = $('#progressFill');
+    if (c) c.textContent = filled;
+    if (t) t.textContent = total;
+    if (bar) bar.style.width = (total ? Math.round((filled / total) * 100) : 0) + '%';
+  }
+
+  // ============ АВТОРАЗМЕР TEXTAREA ============
+  function autoResize(el) {
+    if (!el || el.tagName !== 'TEXTAREA') return;
+    el.style.height = 'auto';
+    el.style.height = (el.scrollHeight + 4) + 'px';
+  }
+
+  // ============ КАЛЬКУЛЯТОР МАССЫ ПАРТИИ ============
+  function setupMassCalculator() {
+    const cans = $('[data-key="t3_cans"]');
+    const weight = $('[data-key="t3_weight"]');
+    const mass = $('[data-key="t3_mass_party"]');
+    if (!cans || !weight || !mass) return;
+
+    function calc() {
+      const c = parseInt(cans.value, 10) || 0;
+      const w = parseFloat(weight.value) || 0;
+      if (c > 0 && w > 0) {
+        const totalG = c * w;
+        const totalKg = totalG / 1000;
+        mass.value = c + ' банок × ' + w + ' г = ' + totalKg + ' кг';
+      } else {
+        mass.value = '';
+      }
+      updateProgress();
+    }
+    cans.addEventListener('input', calc);
+    weight.addEventListener('input', calc);
+    calc();
+  }
+
+  // ============ ПОДСВЕТКА НЕСООТВЕТСТВИЙ В ЗАДАНИИ 4 ============
+  function setupMismatchHighlighter() {
+    $$('#qualityTable tbody tr[data-auto-check]').forEach(row => {
+      const ta = row.querySelector('textarea');
+      if (!ta) return;
+      function check() {
+        const val = ta.value.toLowerCase();
+        const isMismatch = val.includes('не соответствует') && !val.includes('соответствует (') && !val.includes('полностью соответствует');
+        row.classList.toggle('row-mismatch', isMismatch);
+      }
+      ta.addEventListener('input', check);
+      check();
+    });
+  }
+
+  // ============ ПРОВЕРКА ОБЯЗАТЕЛЬНЫХ ПОЛЕЙ ============
+  function getFieldLabel(el) {
+    const tr = el.closest('tr');
+    if (tr && tr.cells[0]) {
+      const t = tr.cells[0].textContent.trim();
+      if (t) return t;
+    }
+    const fg = el.closest('.field-group');
+    if (fg) {
+      const lbl = fg.querySelector('label');
+      if (lbl) return lbl.textContent.trim();
+    }
+    return el.dataset.key || 'поле';
+  }
+
+  function checkRequiredFields(silent) {
+    const missing = [];
+    $$('[data-required="true"]').forEach(el => {
+      const empty = !el.value || el.value.trim() === '';
+      el.classList.toggle('missing-required', empty);
+      if (empty) missing.push(getFieldLabel(el));
+    });
+    if (missing.length > 0 && !silent) {
+      const msg = 'Не заполнены обязательные поля:\n\n• ' + missing.slice(0, 10).join('\n• ');
+      if (!confirm(msg + '\n\nПродолжить?')) return false;
+    }
+    setTimeout(() => $$('.missing-required').forEach(el => el.classList.remove('missing-required')), 4000);
+    return missing.length === 0;
+  }
+
+  // ============ ПЕЧАТЬ ============
+  function printForm() {
+    if (!checkRequiredFields()) return;
+    saveNow();
+    window.print();
+  }
+
+  // ============ ЭКСПОРТ / ИМПОРТ ============
+  function buildFilename(ext) {
+    const name = ($('[data-key="student_name"]')?.value || 'студент').trim().replace(/[^\wа-яё\s-]/gi, '').replace(/\s+/g, '_');
+    const id = ($('[data-key="student_id"]')?.value || '').trim().replace(/[^\w-]/g, '');
+    const date = new Date().toISOString().slice(0, 10);
+    return 'мед_' + name + (id ? '_' + id : '') + '_' + date + '.' + ext;
+  }
+
+  function exportJSON() {
+    saveNow();
+    const blob = new Blob([JSON.stringify(collectData(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = buildFilename('json');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  function importJSON() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          $$('[data-key]').forEach(el => {
+            if (data[el.dataset.key] !== undefined) el.value = data[el.dataset.key];
+          });
+          saveNow();
+          updateProgress();
+          $$('textarea.fill').forEach(autoResize);
+          setupMismatchHighlighter();
+          alert('Данные загружены.');
+        } catch (err) { alert('Не удалось прочитать файл: ' + err.message); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  // ============ ОТПРАВКА ПРЕПОДАВАТЕЛЮ ============
+  async function sendToTeacher() {
+    saveNow();
+    const data = collectData();
+    const name = (data.student_name || 'студент').trim();
+    const json = JSON.stringify(data, null, 2);
+
+    if (navigator.share && navigator.canShare) {
+      try {
+        const file = new File([json], buildFilename('json'), { type: 'application/json' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Практическая работа по мёду',
+            text: 'Работа студента: ' + name,
+            files: [file]
+          });
+          return;
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+    exportJSON();
+    try {
+      await navigator.clipboard.writeText(json);
+      alert('Данные сохранены в файл и скопированы в буфер обмена.\n\nОтправьте файл преподавателю (например, через почту или мессенджер).');
+    } catch (e) {
+      alert('Файл с работой скачан. Отправьте его преподавателю через почту или мессенджер.');
+    }
+  }
+
+  // ============ МОДАЛЫ (ЭТАЛОН И ГОСТ) ============
+  function showReference() {
+    $('#referenceModal').classList.add('show');
+    document.body.classList.add('modal-open');
+  }
+  function closeReference() {
+    $('#referenceModal').classList.remove('show');
+    document.body.classList.remove('modal-open');
+  }
+  function closeReferenceOnBackdrop(e) {
+    if (e.target.id === 'referenceModal') closeReference();
+  }
+
+  function showGost() {
+    $('#gostModal').classList.add('show');
+    document.body.classList.add('modal-open');
+    // Фокус на поиск при открытии
+    setTimeout(() => $('#gostSearch').focus(), 100);
+  }
+  function closeGost() {
+    $('#gostModal').classList.remove('show');
+    document.body.classList.remove('modal-open');
+    // Сброс поиска при закрытии
+    $('#gostSearch').value = '';
+    searchGost();
+  }
+  function closeGostOnBackdrop(e) {
+    if (e.target.id === 'gostModal') closeGost();
+  }
+
+  // ============ ПОИСК ПО ГОСТУ ============
+  function searchGost() {
+    const query = $('#gostSearch').value.trim().toLowerCase();
+    const content = $('#gostContent');
+    
+    // Удаляем старые подсветки
+    const marks = content.querySelectorAll('mark');
+    marks.forEach(mark => {
+      const parent = mark.parentNode;
+      parent.replaceChild(document.createTextNode(mark.textContent), mark);
+      parent.normalize(); // Объединяем текстовые узлы обратно
+    });
+
+    if (query.length < 3) return; // Ищем только если введено 3+ символа
+
+    const walker = document.createTreeWalker(
+      content,
+      NodeFilter.SHOW_TEXT,
+      null,
+      false
+    );
+
+    const nodesToReplace = [];
+    let node;
+
+    while (node = walker.nextNode()) {
+      // Пропускаем скрипты и стили, если они есть внутри (хотя их там нет)
+      if (node.parentNode.nodeName === 'SCRIPT' || node.parentNode.nodeName === 'STYLE') continue;
+      
+      const text = node.nodeValue.toLowerCase();
+      let index = text.indexOf(query);
+      
+      // Простой поиск без учета регистра (можно улучшить до regex, но для базового поиска достаточно)
+      if (index !== -1) {
+        nodesToReplace.push({ node, index, query: query.length });
+      }
+    }
+
+    // Заменяем с конца, чтобы не сбить индексы
+    for (let i = nodesToReplace.length - 1; i >= 0; i--) {
+      const { node, index, query: qLen } = nodesToReplace[i];
+      const text = node.nodeValue;
+      
+      const before = text.substring(0, index);
+      const match = text.substring(index, index + qLen);
+      const after = text.substring(index + qLen);
+
+      const mark = document.createElement('mark');
+      mark.textContent = match;
+
+      const parent = node.parentNode;
+      const frag = document.createDocumentFragment();
+      if (before) frag.appendChild(document.createTextNode(before));
+      frag.appendChild(mark);
+      if (after) frag.appendChild(document.createTextNode(after));
+      
+      parent.replaceChild(frag, node);
+    }
+
+    // Прокрутка к первому совпадению
+    const firstMark = content.querySelector('mark');
+    if (firstMark) {
+      firstMark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function scrollToGostSection(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // ============ ТОЛЬКО ЧТЕНИЕ ============
+  function toggleReadOnly() {
+    const isRO = document.body.classList.toggle('readonly-mode');
+    $$('.fill').forEach(el => {
+      el.readOnly = isRO;
+      if (el.tagName === 'SELECT') el.disabled = isRO;
+    });
+    $('#btnReadonly').textContent = isRO ? '✏️ Разрешить редактирование' : '🔒 Только чтение';
+    $('#btnReadonly').classList.toggle('active', isRO);
+  }
+
+  // ============ ОЧИСТКА ============
+  function clearAll() {
+    if (!confirm('Очистить все поля? Действие необратимо.')) return;
+    $$('[data-key]').forEach(el => el.value = '');
+    saveNow();
+    updateProgress();
+    $$('textarea.fill').forEach(autoResize);
+    setupMismatchHighlighter();
+    autoFillEmptyDates();
+    saveNow();
+    updateProgress();
+  }
+
+  // ============ ВАЛИДАЦИЯ ДАТ (мягкая) ============
+  function validateDates() {
+    $$('[data-key$="_date"], [data-key="t5_date"], [data-key="t5_start"], [data-key="t5_end"]').forEach(el => {
+      if (!el.value.trim()) { el.classList.remove('invalid'); return; }
+      const hasDigit = /\d/.test(el.value);
+      el.classList.toggle('invalid', !hasDigit);
+    });
+  }
+
+  // ============ ЭКСПОРТ ФУНКЦИЙ ============
+  window.saveNow = saveNow;
+  window.clearAll = clearAll;
+  window.exportJSON = exportJSON;
+  window.importJSON = importJSON;
+  window.sendToTeacher = sendToTeacher;
+  window.printForm = printForm;
+  window.showReference = showReference;
+  window.closeReference = closeReference;
+  window.closeReferenceOnBackdrop = closeReferenceOnBackdrop;
+  window.toggleReadOnly = toggleReadOnly;
+  window.showGost = showGost;
+  window.closeGost = closeGost;
+  window.closeGostOnBackdrop = closeGostOnBackdrop;
+  window.searchGost = searchGost;
+  window.scrollToGostSection = scrollToGostSection;
+
+  // ============ ИНИЦИАЛИЗАЦИЯ ============
+  document.addEventListener('DOMContentLoaded', () => {
+    loadData();
+    autoFillEmptyDates();
+    setupMassCalculator();
+    setupMismatchHighlighter();
+    updateProgress();
+
+    $$('.fill').forEach(el => {
+      if (el.tagName === 'TEXTAREA') autoResize(el);
+      el.addEventListener('input', () => { updateProgress(); autoResize(el); });
+      el.addEventListener('blur', () => { saveNow(); validateDates(); });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeReference();
+        closeGost();
+      }
+    });
+
+    window.addEventListener('beforeunload', saveNow);
+    setInterval(saveNow, 30000);
+  });
+})();
+</script>
+
+</body>
+</html>
